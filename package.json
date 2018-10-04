@@ -17,6 +17,7 @@
     "devDependencies": {
         "chai": "^4.2.0",
         "del": "^3.0.0",
+        "fake-indexeddb": "^2.0.4",
         "gulp": "^3.9.1",
         "gulp-mocha": "^6.0.0",
         "gulp-stats": "0.0.4",

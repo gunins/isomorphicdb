@@ -37,7 +37,7 @@ gulp.task('clean', () => {
     ]);
 });
 
-gulp.task('client',['clean'], () => rollup({
+gulp.task('client', ['clean'], () => rollup({
     input:   './src/index.js',
     format:  'iife',
     name:    'isomorpicDB',
@@ -58,7 +58,7 @@ gulp.task('runTest', () => {
     return gulp.src([
         './target/**/*.js'
     ], {read: false})
-        .pipe(mocha({reporter: 'spec'}));
+        .pipe(mocha({reporter: 'spec', exit: true}))
 
 });
 gulp.task('rollupTest', () => {
@@ -68,7 +68,7 @@ gulp.task('rollupTest', () => {
 });
 
 gulp.task('test', done => {
-    sequence('rollupTest', 'runTest', done);
+    sequence('clean', 'rollupTest', 'runTest', done);
 });
 
-gulp.task('default',['client']);
+gulp.task('default', ['client']);
