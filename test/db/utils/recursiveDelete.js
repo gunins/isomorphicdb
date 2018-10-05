@@ -28,7 +28,7 @@ function deleteQueryBatch(db, query, batchSize, resolve, reject) {
 }
 
 
-function deleteCollection(db, collectionPath, batchSize=100) {
+function deleteCollection(db, collectionPath, batchSize = 100) {
     const collectionRef = db.collection(collectionPath);
     const query = collectionRef.orderBy('__name__').limit(batchSize);
     return new Promise((resolve, reject) => deleteQueryBatch(db, query, batchSize, resolve, reject));

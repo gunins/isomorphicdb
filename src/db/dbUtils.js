@@ -7,4 +7,18 @@ const merge = (source = {}, target = {}) => keys(target)
         const current = acc[currentKey];
         return assign(acc, {[currentKey]: (obj && obj.constructor === Object && current && current.constructor === Object) ? merge(current, obj) : obj});
     }, source);
-export {assign, merge, pm, toArray};
+
+const loopToArray = _ => {
+    let array = [];
+    _.forEach(_ => {
+        array.push(_);
+    });
+    return array;
+};
+
+const wrapToObject = key => _ => ({
+    [key]() {
+        return _
+    }
+});
+export {assign, merge, pm, toArray, loopToArray, wrapToObject};

@@ -1,7 +1,8 @@
-import {merge, pm, toArray} from './dbUtils';
+import {merge, loopToArray, wrapToObject} from './dbUtils';
 import {option, promiseOption} from '../lib/option';
 import {uniqueArray} from '../lib/unique';
-import {compose} from '../lib/curry';
+import {compose, curry, composeP} from '../lib/curry';
+import {proxy} from '../lib/proxy';
 
 const setID = (id = '') => ({
     get() {
@@ -12,71 +13,47 @@ const setID = (id = '') => ({
     }
 });
 
-const {assign} = Object;
-//has available on readwrite and read only, and return only booleaan. that's why is not checked.
-const types = {
-    '*':         ['get', 'find', 'has', 'getAllKeys'],
-    'readwrite': ['get', 'find', 'has', 'getAllKeys', 'put', 'add', 'update', 'delete', 'clear']
-};
+const setRef = collection => keyPath => {
+    const ref = option().or(keyPath, () => collection.doc(setID(keyPath).set())).finally(() => collection);
+    return ({
+        get() {
+            return ref.get()
+        },
+        set(data) {
+            return ref.set(data)
+        },
+        where(...args) {
+            return ref.where(...args)
+        },
+        delete() {
+            return ref.delete()
+        }
+    });
+}
 
-const checkType = (method, _type) => {
-    const type = types[_type] || types['*'];
-    return pm((res, rej) => type.indexOf(method) !== -1 ? res() : rej({
-        status:  'Error',
-        message: 'Method not Allowed, for this transaction type.',
-        method
-    }))
-};
+
+const {assign} = Object;
+
+
 const dataExistError = (keyPath) => Promise.reject(`Key "${keyPath}" already exists in the object store.`);
 const getData = snapshot => option().or(snapshot.data, () => snapshot.data()).finally(() => ({}));
 const stripSlashes = (path) => (string) => (string || '').replace(path, '').replace(/^\//g, '').split('/').shift();
 const setKeyPath = (keyPath = '') => data => uniqueArray(data.map(_ => _.toString()).filter(_ => _.indexOf(keyPath) === 0).map(stripSlashes(keyPath)));
 
-const snapshotToArray = _ => {
-    let array = [];
-    _.forEach(_ => {
-        array.push(_);
-    });
-    return array;
-};
-const setKeys = _ => snapshotToArray(_).map(({id}) => setID(id).get());
-const setSnapshotData = _ => ({
-    data() {
-        return snapshotToArray(_).map(_ => _.data());
-    }
-});
+const setKeys = _ => loopToArray(_).map(({id}) => setID(id).get());
 
-const extractKeys = (keyPath, _) => ({
-    data() {
-        return compose(setKeyPath(keyPath), setKeys)(_)
-    }
-});
-
-const response = (execution, method) => execution()
-    .then((snapshot) => ({
-        status:  'Success',
-        data:    getData(snapshot),
-        message: 'firetrace transaction finished',
-        method
-    })).catch((error) => ({
-        status:  'Error',
-        message: error,
-        method
-    }));
-
-
-const updateData = (ref, data) => ref.get().then(_ => ref.set(merge(_.data(), data)));
-const applyResult = (execution, method, _type) => checkType(method, _type).then(() => response(execution, method));
+const toData = wrapToObject('data');
+const extractKeys = (keyPath, _) => compose(toData, setKeyPath(keyPath), setKeys)(_);
+const setSnapshotData = _ => compose(toData, _ => _.map(_ => _.data()), loopToArray)(_);
 
 const getID = collection => collection().get().then(({size}) => size + 1);
+const setPath = (autoIncrement, collection, path) => async data => await option().or(autoIncrement, () => getID(collection)).finally(async () => data[path]);
 
-const _collection = Symbol('_collection');
 const _exists = Symbol('_exists');
-const _type = Symbol('_type');
 const _keyPath = Symbol('_keyPath');
+const _path = Symbol('_path');
 const _getRef = Symbol('_getRef');
 const _getKeyPath = Symbol('_getKeyPath');
-const _autoIncrement = Symbol('_autoIncrement');
 
 class Action {
     constructor(collection, type, options) {
@@ -85,13 +62,12 @@ class Action {
             throw error('KeyPath Not defined.')
         }
         this[_keyPath] = keyPath;
-        this[_autoIncrement] = autoIncrement;
-        this[_collection] = collection;
-        this[_type] = type;
+        this[_path] = setPath(autoIncrement, collection, keyPath);
+        this[_getRef] = setRef(collection);
     };
 
     async [_getKeyPath](data) {
-        const keyPath = (this[_autoIncrement] ? await getID(this[_collection]) : data[this[_keyPath]]);
+        const keyPath = await this[_path](data);
         if (!keyPath) {
             return Promise.reject({
                 status:  'Error',
@@ -104,16 +80,13 @@ class Action {
         }
     };
 
-    [_getRef](keyPath) {
-        return option().or(keyPath, () => this[_collection].doc(setID(keyPath).set())).finally(() => this[_collection])
-    };
 
     [_exists](keyPath) {
         return this[_getRef](keyPath).get().then(({exists}) => promiseOption(exists));
     };
 
     get(keyPath) {
-        return applyResult(() => this[_getRef](keyPath).get(), 'get', this[_type]);
+        return this[_getRef](keyPath).get();
     };
 
     //TODO: need later to alias on _exists function. At the moment this is the current API
@@ -123,45 +96,58 @@ class Action {
 
     //TODO: By concept, this function possibly not required. Possibly will remove.
     find(field, value) {
-        return applyResult(() => this[_getRef]().where(field, '==', value).get().then(_ => setSnapshotData(_)), 'find', this[_type]);
+        return this[_getRef]().where(field, '==', value).get().then(_ => setSnapshotData(_));
 
     };
 
     getAllKeys(keyPath) {
-        return applyResult(() => this[_getRef]().get().then(_ => extractKeys(keyPath, _)), 'getAllKeys', this[_type]);
+        return this[_getRef]().get().then(_ => extractKeys(keyPath, _));
     };
 
-    async put(obj) {
-        const {keyPath, data} = await
-            this[_getKeyPath](obj);
-        return applyResult(() => this[_getRef](keyPath).set(data), 'put', this[_type]);
+    put(obj) {
+        const execution = ({keyPath, data}) => this[_getRef](keyPath).set(data);
+        return this[_getKeyPath](obj).then(_ => execution(_));
     };
 
-    async add(obj) {
-        const {keyPath, data} = await this[_getKeyPath](obj);
-        return applyResult(() => this[_exists](keyPath)
-                .then(() => dataExistError(keyPath))
-                .catch(() => this[_getRef](keyPath).set(data)),
-            'add',
-            this[_type]);
+    add(obj) {
+        const execution = ({keyPath, data}) => this[_exists](keyPath)
+            .then(() => dataExistError(keyPath))
+            .catch(() => this[_getRef](keyPath).set(data));
+        return this[_getKeyPath](obj).then(_ => execution(_));
+
 
     };
 
     update(keyPath, data, force = false) {
-        const ref = this[_getRef](keyPath);
-        return applyResult(() => option().or(force, () => ref.set(data)).finally(() => updateData(ref, data)), 'update', this[_type]);
-
+        const {get, set} = this[_getRef](keyPath);
+        return option().or(force, () => set(data)).finally(() => composeP(set, async _ => merge(_.data(), data), get)());
     };
 
     delete(keyPath) {
-        return applyResult(() => this[_getRef](keyPath).delete(), 'delete', this[_type]);
+        return this[_getRef](keyPath).delete();
     };
 
 }
 
-const transaction = (db, options = {}) => type => new Action(db, type, options);
+const errorResponse = (error, method) => ({
+    status:  'Error',
+    message: error,
+    method
+});
+
+const successResponse = (method, _) => ({
+    status:  'Success',
+    data:    getData(_),
+    message: 'firetrace transaction finished',
+    method
+});
+
+
+const transaction = (db, options = {}) => type => proxy(new Action(db, type, options), type, successResponse, errorResponse);
+
+const getCollection = curry((firestore, name, version, obj) => firestore.collection(`/${name}/${version}/${obj}`));
 const db = (name, version, firestore) => ({
-    createObjectStore: async (obj, options) => transaction(firestore.collection(`/${name}/${version}/${obj}`), options)
+    createObjectStore: (obj, options) => transaction(getCollection(firestore)(name, version, obj), options)
 });
 
 export default db

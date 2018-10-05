@@ -25,7 +25,7 @@ const dbName = 'test';
 const version = 1;
 const collectionName = 'testRecords';
 
-describe('Tests for firestore interface', function() {
+describe.only('Tests for firestore interface', function() {
     this.timeout(5000);
     after(() => deleteCollection(firestore, `${dbName}/${version}/${collectionName}`));
     it('test, database connection and get add', async () => {
@@ -188,21 +188,20 @@ describe('Tests for firestore interface', function() {
 
         let resultHasD = await transactions.has(3456783);
         let resultHasE = await transactions.has(3456781);
+          expect(resultHasA).to.be.true;
+          expect(resultHasB).to.be.true;
+          expect(resultHasC).to.be.true;
 
-        expect(resultHasA).to.be.true;
-        expect(resultHasB).to.be.true;
-        expect(resultHasC).to.be.true;
+          expect(resultHasD).to.be.false;
+          expect(resultHasE).to.be.false;
 
-        expect(resultHasD).to.be.false;
-        expect(resultHasE).to.be.false;
+          let transactionD = await transactions.update(345678, recordE);
+          expect(transactionD.method).to.be.eql('update');
 
-        let transactionD = await transactions.update(345678, recordE);
-        expect(transactionD.method).to.be.eql('update');
+          let resultD = await transactions.get(345678);
 
-        let resultD = await transactions.get(345678);
-
-        expect(resultD.method).to.be.eql('get');
-        expect(resultD.data).to.be.eql(recordDE);
+          expect(resultD.method).to.be.eql('get');
+          expect(resultD.data).to.be.eql(recordDE);
 
     });
 
