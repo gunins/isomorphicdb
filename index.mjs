@@ -1,9 +1,5 @@
-import admin from 'firebase-admin';
-import serviceAccount from './_hidden/serviceAccountKey';
+import indexedDBAdapter from './src/db/indexedDB';
+import firebaseAdapter from './src/db/firebase';
+import firestoreAdapter from './src/db/firestore';
 
-const app = admin.initializeApp({
-    credential:  admin.credential.cert(serviceAccount),
-    databaseURL: 'https://test-project-780a1.firebaseio.com'
-});
-
-console.log(app);
+export {indexedDBAdapter,firebaseAdapter,firestoreAdapter}

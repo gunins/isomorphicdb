@@ -40,19 +40,18 @@ let excludePaths = getFiles(process.cwd() + '/src');
 
 
 // extension for rollup, for executing any file in directory from src
-let rollupStream = (srcDir, browser = false, format = 'cjs', {fBinding, include}) => chain((chunk) => {
+let rollupStream = (srcDir, browser = false, format = 'cjs') => chain((chunk) => {
     const dir = srcDir[srcDir.length - 1] === '/' ? srcDir.substring(0, srcDir.length - 1) : srcDir;
     const baseDir = process.cwd() + dir + '/';
     const {path} = chunk;
     const moduleName = path.replace(baseDir, '');
-    const excluded = excludePaths.filter(file => file !== path);
+    // const excluded = excludePaths.filter(file => file !== path);
     return rollup({
         input:   path,
         format,
         name:    moduleName,
         plugins: (browser ?
             [
-                forceBinding(fBinding),
                 builtins(),
                 resolve({
                     browser
@@ -60,15 +59,13 @@ let rollupStream = (srcDir, browser = false, format = 'cjs', {fBinding, include}
                 commonjs()
 
             ] : [
-                forceBinding(fBinding)
             ]).concat(
             [
                 includePaths({
-                    include,
                     extensions: ['.js']
                 })
             ])
     }).pipe(source(moduleName));
 });
 
-module.exports = rollupStream
+module.exports = rollupStream;

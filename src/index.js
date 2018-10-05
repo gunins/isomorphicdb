@@ -1,4 +1,5 @@
-import {curry} from './lib/curry';
-import {lensPath, view, set} from './lib/lenses';
+import indexedDBadapter from './db/indexedDB';
+import firebaseAdapter from './db/firebase';
+import firestoreAdapter from './db/firestore';
 
-export {curry, lensPath, view, set};
+export {indexedDBadapter,firebaseAdapter,firestoreAdapter}
