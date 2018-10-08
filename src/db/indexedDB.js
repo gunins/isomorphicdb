@@ -49,58 +49,56 @@ const applyResult = (objectStore) => pm((res, rej) => assign(
         }
     }));
 
-const _db = Symbol('_ref');
-const _name = Symbol('_name');
-const _type = Symbol('_type');
-const _setTransaction = Symbol('_setTransaction');
+const _ref = Symbol('_ref');
 
+const setRef = (db, name, type) => () => new Proxy(db.transaction(name, type).objectStore(name), {
+    get(instance, method) {
+        return (...args) => applyResult(instance[method](...args))
+    }
+});
 
 class DBDriver {
     constructor(db, name, type) {
-        this[_name] = name;
-        this[_db] = db;
-        this[_type] = type;
-    };
-
-    [_setTransaction]() {
-        return this[_db].transaction(this[_name], this[_type]).objectStore(this[_name]);
+        this[_ref] = setRef(db, name, type);
     };
 
     getAllKeys(keyPath) {
-        return applyResult(this[_setTransaction]().getAllKeys()).then(_ => assign(_, {data: setKeyPath(keyPath, _.data)}));
+        return this[_ref]().getAllKeys().then(_ => assign(_, {data: setKeyPath(keyPath, _.data)}));
     };
 
     get(keyPath) {
-        return applyResult(this[_setTransaction]().get(keyPath))
+        return this[_ref]().get(keyPath);
     };
 
     has(keyPath) {
-        return applyResult(this[_setTransaction]().get(keyPath)).then(({data}) => !!data);
+        return this[_ref]().get(keyPath).then(({data}) => !!data);
     };
 
 
     put(data) {
-        return applyResult(this[_setTransaction]().put(data));
+        return this[_ref]().put(data);
     };
 
 
     add(data) {
-        return applyResult(this[_setTransaction]().add(data));
+        return this[_ref]().add(data);
     };
 
-    async update(keyPath, data, force) {
-        const result = await this.get(keyPath);
-        const newVar = result.data && !force ? merge(result.data, data) : data;
-        return applyResult(this[_setTransaction]().put(newVar));
+    update(keyPath, data, force) {
+        return this.get(keyPath)
+            .then(_ => option()
+                .or(_.data && !force, () => merge(_.data, data))
+                .finally(() => data))
+            .then(merged => this[_ref]().put(merged));
     };
 
     delete(keyPath) {
-        return applyResult(this[_setTransaction]().delete(keyPath));
+        return this[_ref]().delete(keyPath);
     };
 
     //TODO: maybe too dangerous, need to remove.
     clear() {
-        return applyResult(this[_setTransaction]().clear())
+        return this[_ref]().clear();
     }
 }
 
@@ -113,7 +111,6 @@ const transaction = (name, db) => (type) => new Proxy(dbDriver(db, name, type), 
                 .finally(() => _))
     }
 });
-
 
 
 const resultLens = view(lensPath('target', 'result'));
