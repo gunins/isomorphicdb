@@ -1,11 +1,23 @@
+import {lensPath, view} from '../lib/lenses';
+import {option} from '../lib/option';
+
+const constructorLens = view(lensPath('constructor'));
+const eql = compareFunction => (...args) => args.every(_ => compareFunction(_));
+const isObjects = eql(_ => constructorLens(_) === Object);
 const {assign, keys} = Object;
-const pm = (...args) => new Promise(...args);
-const toArray = obj => obj ? keys(obj).reduce((arr, key) => arr.concat([obj[key]]), []) : [];
+
+const pm = _ => new Promise(_);
+const toArray = obj => keys(obj || {}).reduce((arr, key) => arr.concat([obj[key]]), []);
+
 const merge = (source = {}, target = {}) => keys(target)
     .reduce((acc, currentKey) => {
         const obj = target[currentKey];
         const current = acc[currentKey];
-        return assign(acc, {[currentKey]: (obj && obj.constructor === Object && current && current.constructor === Object) ? merge(current, obj) : obj});
+        return assign(acc, {
+            [currentKey]: option()
+                              .or(isObjects(obj, current), () => merge(current, obj))
+                              .finally(() => obj)
+        });
     }, source);
 
 const loopToArray = _ => {
@@ -17,8 +29,6 @@ const loopToArray = _ => {
 };
 
 const wrapToObject = key => _ => ({
-    [key]() {
-        return _
-    }
+    [key]: () => _
 });
 export {assign, merge, pm, toArray, loopToArray, wrapToObject};

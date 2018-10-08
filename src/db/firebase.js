@@ -118,9 +118,9 @@ const error = (method, message) => ({
     method
 });
 
-const success = (method, _) => ({
+const success = (method, data) => ({
     status:  'Success',
-    data:    _,
+    data,
     message: 'firebase transaction finished',
     method
 });
@@ -131,7 +131,7 @@ const transaction = (db, options = {}) => type => proxy(dbDriver(db, options), {
     error
 });
 
-const getReference = (firebaseDatabase)=>(name, version, obj) => firebaseDatabase.ref(`/${name}/${version}/${obj}`);
+const getReference = (firebaseDatabase) => (name, version, obj) => firebaseDatabase.ref(`/${name}/${version}/${obj}`);
 const db = (name, version, firebaseDatabase) => ({
     createObjectStore: (obj, options) => transaction(getReference(firebaseDatabase)(name, version, obj), options)
 });
