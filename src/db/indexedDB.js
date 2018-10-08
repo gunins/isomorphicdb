@@ -6,6 +6,24 @@ import {isObject} from '../lib/isObject';
 
 const {assign} = Object;
 
+const openDB = (indexedDB, name, version, options) => pm((res, rej) => assign(indexedDB.open(name, version),
+    {
+        onupgradeneeded(event) {
+            const db = resultLens(event);
+            const {objectStoreNames} = db;
+            if (!objectStoreNames.contains(name)) {
+                db.createObjectStore(name, options);
+            }
+        },
+        onsuccess(_) {
+            res(_)
+        },
+        onerror(error) {
+            rej(error)
+        }
+    }));
+
+
 const stripSlashes = (path) => (string) => (string || '').replace(path, '').replace(/^\//g, '').split('/').shift();
 const setKeyPath = (keyPath = '', data) => uniqueArray(data.map(_ => _.toString()).filter(_ => _.indexOf(keyPath) === 0).map(stripSlashes(keyPath)));
 
@@ -96,20 +114,11 @@ const transaction = (name, db) => (type) => new Proxy(dbDriver(db, name, type), 
     }
 });
 
+
+
 const resultLens = view(lensPath('target', 'result'));
 const db = (name, version, indexedDB) => ({
-    createObjectStore: (name, options) => pm((res, rej) => assign(indexedDB.open(name, version),
-        {
-            onupgradeneeded(event) {
-                const db = resultLens(event);
-                const {objectStoreNames} = db;
-                if (!objectStoreNames.contains(name)) {
-                    db.createObjectStore(name, options);
-                }
-            },
-            onsuccess: event => res(transaction(name, resultLens(event))),
-            onerror:   event => rej(event)
-        }))
+    createObjectStore: (name, options) => openDB(indexedDB, name, version, options).then(_ => transaction(name, resultLens(_)))
 });
 
 export default db;

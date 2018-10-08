@@ -6,7 +6,7 @@ const {assign, keys} = Object;
 
 
 const useTransaction = ref => update => ref
-    .transaction((..._) => update(..._),
+    .transaction(_ => update(_),
         (error, committed, snapshot) => pm((res, rej) => option()
             .or(error, () => rej(error))
             .or(!committed, () => rej('Key already exists in the object store.'))
