@@ -9,7 +9,7 @@ const {assign} = Object;
 const openDB = (indexedDB, name, version, options) => pm((res, rej) => assign(indexedDB.open(name, version),
     {
         onupgradeneeded(event) {
-            const db = resultLens(event);
+            const db = dbLens(event);
             const {objectStoreNames} = db;
             if (!objectStoreNames.contains(name)) {
                 db.createObjectStore(name, options);
@@ -113,9 +113,11 @@ const transaction = (name, db) => (type) => new Proxy(dbDriver(db, name, type), 
 });
 
 
-const resultLens = view(lensPath('target', 'result'));
+const dbLens = view(lensPath('target', 'result'));
 const db = (name, version, indexedDB) => ({
-    createObjectStore: (name, options) => openDB(indexedDB, name, version, options).then(_ => transaction(name, resultLens(_)))
+    createObjectStore(name, options) {
+        return openDB(indexedDB, name, version, options).then(_ => transaction(name, dbLens(_)));
+    }
 });
 
 export default db;
