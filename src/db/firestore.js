@@ -1,7 +1,7 @@
 import {merge, loopToArray, wrapToObject} from './dbUtils';
 import {option, promiseOption} from '../lib/option';
 import {uniqueArray} from '../lib/unique';
-import {compose, curry, composeP} from '../lib/curry';
+import {compose, composeP} from '../lib/curry';
 import {proxy} from '../lib/proxy';
 
 const setID = (id = '') => ({
@@ -29,7 +29,7 @@ const setRef = collection => keyPath => {
             return ref.delete()
         }
     });
-}
+};
 
 
 const {assign} = Object;
@@ -55,8 +55,8 @@ const _path = Symbol('_path');
 const _getRef = Symbol('_getRef');
 const _getKeyPath = Symbol('_getKeyPath');
 
-class Action {
-    constructor(collection, type, options) {
+class DBDriver {
+    constructor(collection, options) {
         const {autoIncrement, keyPath} = assign({autoIncrement: false}, options);
         if (!keyPath) {
             throw error('KeyPath Not defined.')
@@ -129,9 +129,9 @@ class Action {
 
 }
 
-const errorResponse = (error, method) => ({
-    status:  'Error',
-    message: error,
+const errorResponse = (method, message) => ({
+    status: 'Error',
+    message,
     method
 });
 
@@ -142,12 +142,18 @@ const successResponse = (method, _) => ({
     method
 });
 
+const dbDriver = (...args) => new DBDriver(...args);
 
-const transaction = (db, options = {}) => type => proxy(new Action(db, type, options), type, successResponse, errorResponse);
+const transaction = (db, options = {}) => type => proxy(dbDriver(db, options), {
+    type,
+    success: successResponse,
+    error:   errorResponse
+});
 
-const getCollection = curry((firestore, name, version, obj) => firestore.collection(`/${name}/${version}/${obj}`));
-const db = (name, version, firestore) => ({
-    createObjectStore: (obj, options) => transaction(getCollection(firestore)(name, version, obj), options)
+
+const getCollection = (fireStore) => (name, version, obj) => fireStore.collection(`/${name}/${version}/${obj}`);
+const db = (name, version, fireStore) => ({
+    createObjectStore: (obj, options) => transaction(getCollection(fireStore)(name, version, obj), options)
 });
 
 export default db

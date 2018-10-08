@@ -21,11 +21,12 @@ let recordKeyPathA = {title: "Quarry Memories", author: "Freda", isbn: 'a/b/c/12
 let recordKeyPathB = {title: "Quarry Memories", author: "Fredb", isbn: 'a/b/c/123457'};
 
 const firestore = innerFB.firestore();
+firestore.settings({timestampsInSnapshots: true});
 const dbName = 'test';
 const version = 1;
 const collectionName = 'testRecords';
 
-describe.only('Tests for firestore interface', function() {
+describe('Tests for firestore interface', function() {
     this.timeout(5000);
     after(() => deleteCollection(firestore, `${dbName}/${version}/${collectionName}`));
     it('test, database connection and get add', async () => {

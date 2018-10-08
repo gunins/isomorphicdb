@@ -21,9 +21,9 @@ const response = (instance, method, success, error) => (...args) => instance[met
     .then(_ => option()
         .or(method === 'has', () => _)
         .finally(() => success(method, _)))
-    .catch((_) => error(_, method));
+    .catch(_ => error(method, _));
 
-const proxy = (instance, type, success, error) => new Proxy(instance, {
+const proxy = (instance, {type, success, error}) => new Proxy(instance, {
     get(obj, method) {
         return option()
             .or(checkType(method, type), () => response(instance, method, success, error))
