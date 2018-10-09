@@ -5,3 +5,4 @@
 /dist/
 /target/
 /examples/generic/node_modules/
+/examples/generic/target/

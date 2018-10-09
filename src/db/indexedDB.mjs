@@ -103,12 +103,19 @@ class DBDriver {
 }
 
 const dbDriver = (...args) => new DBDriver(...args);
+
+const getInstance = (instance, method) => (...args) => instance[method](...args)
+    .then(_ => option()
+        .or(isObject(_), () => assign(_, {method}))
+        .finally(() => _));
+
+const isMethod = (instance, method) => !!instance[method];
+
 const transaction = (name, db) => (type) => new Proxy(dbDriver(db, name, type), {
     get(instance, method) {
-        return (...args) => instance[method](...args)
-            .then(_ => option()
-                .or(isObject(_), () => assign(_, {method}))
-                .finally(() => _))
+        return option()
+            .or(isMethod(instance, method), () => getInstance(instance, method))
+            .finally(() => instance)
     }
 });
 
