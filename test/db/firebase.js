@@ -8,13 +8,13 @@ const innerFB = admin.initializeApp({
     databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
 }, 'firebase');
 
-let recordA = {title: "Quarry Memories", author: "Fred", isbn: 123456}
-let recordA_ = {title: "Quarry Memories", author: "Freda", isbn: 123456}
-let recordB = {title: "Water Buffaloes", author: "Fred", isbn: 234567}
-let recordC = {title: "Bedrock Nights", author: "Barney", isbn: 345678}
-let recordD = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', c: [1, 2, 3]}, isbn: 345678}
-let recordE = {title: "Bedrock Nights", author: "Barney", deep: {b: 'deepB', c: [1, 2, 3]}, isbn: 345678}
-let recordDE = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', b: 'deepB', c: [1, 2, 3]}, isbn: 345678}
+let recordA = {title: "Quarry Memories", author: "Fred", isbn: 123456};
+let recordA_ = {title: "Quarry Memories", author: "Freda", isbn: 123456};
+let recordB = {title: "Water Buffaloes", author: "Fred", isbn: 234567};
+let recordC = {title: "Bedrock Nights", author: "Barney", isbn: 345678};
+let recordD = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', c: [1, 2, 3]}, isbn: 345678};
+let recordE = {title: "Bedrock Nights", author: "Barney", deep: {b: 'deepB', c: [1, 2, 3]}, isbn: 345678};
+let recordDE = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', b: 'deepB', c: [1, 2, 3]}, isbn: 345678};
 
 let recordKeyPathA = {title: "Quarry Memories", author: "Freda", isbn: 'a/b/c/123456'};
 let recordKeyPathB = {title: "Quarry Memories", author: "Fredb", isbn: 'a/b/c/123457'};

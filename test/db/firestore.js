@@ -9,13 +9,13 @@ const innerFB = admin.initializeApp({
     databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
 }, 'firestore');
 
-let recordA = {title: "Quarry Memories", author: "Fred", isbn: 123456}
-let recordA_ = {title: "Quarry Memories", author: "Freda", isbn: 123456}
+let recordA = {title: "Quarry Memories", author: "Fred", isbn: 123456};
+let recordA_ = {title: "Quarry Memories", author: "Freda", isbn: 123456};
 let recordB = {title: "Water Buffaloes", author: "Fred", isbn: 234567}
-let recordC = {title: "Bedrock Nights", author: "Barney", isbn: 345678}
-let recordD = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', c: [1, 2, 3]}, isbn: 345678}
-let recordE = {title: "Bedrock Nights", author: "Barney", deep: {b: 'deepB', c: [1, 2, 3]}, isbn: 345678}
-let recordDE = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', b: 'deepB', c: [1, 2, 3]}, isbn: 345678}
+let recordC = {title: "Bedrock Nights", author: "Barney", isbn: 345678};
+let recordD = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', c: [1, 2, 3]}, isbn: 345678};
+let recordE = {title: "Bedrock Nights", author: "Barney", deep: {b: 'deepB', c: [1, 2, 3]}, isbn: 345678};
+let recordDE = {title: "Bedrock Nights", author: "Barney", deep: {a: 'deepA', b: 'deepB', c: [1, 2, 3]}, isbn: 345678};
 
 let recordKeyPathA = {title: "Quarry Memories", author: "Freda", isbn: 'a/b/c/123456'};
 let recordKeyPathB = {title: "Quarry Memories", author: "Fredb", isbn: 'a/b/c/123457'};
@@ -32,7 +32,7 @@ describe('Tests for firestore interface', function() {
     it('test, database connection and get add', async () => {
 
         let database = db(dbName, version, firestore);
-        let objectStore = await database.createObjectStore('testRecords', {keyPath: 'isbn'});
+        let objectStore = await database.createObjectStore(collectionName, {keyPath: 'isbn'});
         let transaction = objectStore('readwrite');
         let transactionA = await transaction.add(recordA);
 
@@ -58,7 +58,7 @@ describe('Tests for firestore interface', function() {
     });
     it('testing find function', async () => {
         let database = db(dbName, version, firestore);
-        let objectStore = await database.createObjectStore('testRecords', {keyPath: 'isbn'});
+        let objectStore = await database.createObjectStore(collectionName, {keyPath: 'isbn'});
         let transaction = objectStore('readwrite');
 
         let findA = await transaction.find('author', 'Fred');
@@ -74,7 +74,7 @@ describe('Tests for firestore interface', function() {
 
     it('test method, getAllKeys', async () => {
         let database = db(dbName, version, firestore);
-        let objectStore = await database.createObjectStore('testRecords', {keyPath: 'isbn'});
+        let objectStore = await database.createObjectStore(collectionName, {keyPath: 'isbn'});
         let transactions = objectStore('readwrite');
         let keys = await transactions.getAllKeys();
 
@@ -98,7 +98,7 @@ describe('Tests for firestore interface', function() {
 
     it('test, database connection and get delete', async () => {
         let database = db(dbName, version, firestore);
-        let objectStore = await database.createObjectStore('testRecords', {keyPath: 'isbn'});
+        let objectStore = await database.createObjectStore(collectionName, {keyPath: 'isbn'});
         let transactions = objectStore('readwrite');
 
         let transactionA = await transactions.delete(123456);
@@ -122,7 +122,7 @@ describe('Tests for firestore interface', function() {
 
     it('test, database connection and get put', async () => {
         let database = db(dbName, version, firestore);
-        let objectStore = await database.createObjectStore('testRecords', {keyPath: 'isbn'});
+        let objectStore = await database.createObjectStore(collectionName, {keyPath: 'isbn'});
         let transactions = objectStore('readwrite');
 
         let transactionA = await transactions.put(recordA_);
@@ -154,7 +154,7 @@ describe('Tests for firestore interface', function() {
 
     it('test, database connection and get update, has', async () => {
         let database = db(dbName, version, firestore);
-        let objectStore = await database.createObjectStore('testRecords', {keyPath: 'isbn'});
+        let objectStore = await database.createObjectStore(collectionName, {keyPath: 'isbn'});
         let transactions = objectStore('readwrite');
 
         let transactionA = await transactions.update(123456, {author: 'Vasja'});

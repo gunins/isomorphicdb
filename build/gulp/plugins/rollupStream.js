@@ -62,7 +62,7 @@ let rollupStream = (srcDir, browser = false, format = 'cjs') => chain((chunk) =>
             ]).concat(
             [
                 includePaths({
-                    extensions: ['.js']
+                    extensions: ['.js','.mjs']
                 })
             ])
     }).pipe(source(moduleName));

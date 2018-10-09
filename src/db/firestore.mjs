@@ -144,7 +144,7 @@ const successResponse = (method, _) => ({
 
 const dbDriver = (...args) => new DBDriver(...args);
 
-const transaction = (db, options = {}) => type => proxy(dbDriver(db, options), {
+const transaction = async (db, options = {}) => type => proxy(dbDriver(db, options), {
     type,
     success: successResponse,
     error:   errorResponse

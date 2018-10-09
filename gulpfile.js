@@ -29,7 +29,7 @@ gulp.task('client', ['clean'], () => rollup({
         }),
         includePaths({
             // include,
-            extensions: ['.js']
+            extensions: ['.js','.mjs']
         })]
 }).pipe(source('index.js'))
     .pipe(gulp.dest(`./dist`)));
