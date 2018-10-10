@@ -4,14 +4,13 @@ const types = {
     '*':         ['get', 'find', 'has', 'getAllKeys'],
     'readwrite': ['get', 'find', 'has', 'getAllKeys', 'put', 'add', 'update', 'delete', 'clear']
 };
-const constructorTypes = ['then'];
 
 
 const checkType = (method, _type) => {
     const type = types[_type] || types['*'];
-    return type.indexOf(method)!==-1;
+    return type.indexOf(method) !== -1;
 };
-const checkConstructorTypes = method => constructorTypes.indexOf(method)!==-1;
+const isMethod = (instance, method) => !!instance[method];
 
 const errorAccess = (method) => () => Promise.reject({
     status:  'Error',
@@ -26,10 +25,11 @@ const response = (instance, method, success, error) => (...args) => instance[met
     .catch(_ => error(method, _));
 
 const proxy = (instance, {type, success, error}) => new Proxy(instance, {
-    get(obj, method) {
+    get(_, method) {
         return option()
-            .or(checkConstructorTypes(method), () => obj)
-            .or(checkType(method, type), () => response(instance, method, success, error))
+        //For some reasons in Proxy true promises, is called method then. To avoid fail in promises, this hack will help.
+            .or(!isMethod(instance, method), () => _)
+            .or(checkType(method, type), () => response(_, method, success, error))
             .finally(() => errorAccess(method))
     }
 });

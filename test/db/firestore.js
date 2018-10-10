@@ -32,8 +32,7 @@ describe('Tests for firestore interface', function() {
     it('test, database connection and get add', async () => {
 
         let database = db(dbName, version, firestore);
-        let objectStore = await database.createObjectStore(collectionName, {keyPath: 'isbn'});
-        let transaction = objectStore('readwrite');
+        let transaction = await database.createObjectStore(collectionName, {keyPath: 'isbn'}).then(_=>_('readwrite'));
         let transactionA = await transaction.add(recordA);
 
         let transactionB = await transaction.add(recordB);

@@ -21,11 +21,10 @@ describe('Tests for indexedDB interface', () => {
 
     it('test, database connection and get add', async () => {
         let database = db('test', 1, indexedDB);
-        let objectStore = await database.createObjectStore('testRecords', {keyPath: 'isbn'});
-        let transaction = objectStore('readwrite');
+        let transaction = await database.createObjectStore('testRecords', {keyPath: 'isbn'}).then(_ => _('readwrite'));
 
-        let transactionA = await  transaction.add(recordA);
-        let transactionB = await  transaction.add(recordB);
+        let transactionA = await transaction.add(recordA);
+        let transactionB = await transaction.add(recordB);
         let transactionC = await transaction.add(recordC);
 
         expect(transactionA.method).to.be.eql('add');
@@ -125,8 +124,8 @@ describe('Tests for indexedDB interface', () => {
         expect(keys.method).to.be.eql('getAllKeys');
         expect(keys.data).to.be.eql(['123456', '234567', '345678']);
 
-        let transactionA = await  transactions.add(recordKeyPathA);
-        let transactionB = await  transactions.add(recordKeyPathB);
+        let transactionA = await transactions.add(recordKeyPathA);
+        let transactionB = await transactions.add(recordKeyPathB);
 
         let keysA = await transactions.getAllKeys('a/b/c');
         expect(keysA.data).to.be.eql(['123456', '123457']);

@@ -5,8 +5,8 @@ const dbCollection = view(lensPath('db', 'collection'))(config);
 const keyPath = view(lensPath('db', 'keyPath'))(config);
 
 export default async (driver) => {
-    const db = await driver.createObjectStore(dbCollection, {keyPath});
-    const {put, get, getAllKeys} = db('readwrite');
+    const {put, get, getAllKeys} = await driver.createObjectStore(dbCollection, {keyPath}).then(_=>_('readwrite'));
+    // const {put, get, getAllKeys} = db('readwrite');
     return ({
         addUsers(batch) {
             return Promise.all(batch.map(_ => put(_)));
