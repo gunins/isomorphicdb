@@ -2,8 +2,8 @@ import express from 'express';
 import data from './data';
 import query from './query';
 
-export default async (driver, engine) => {
-    const {addUsers, readUser, readIds} = await query(driver, engine);
+export default async (driver) => {
+    const {addUsers, readUser, readIds} = await query(driver);
     const updateData = await addUsers(data);
     console.log(updateData);
 
