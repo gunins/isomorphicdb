@@ -28,7 +28,7 @@ const proxy = (instance, {type, success, error}) => new Proxy(instance, {
     get(_, method) {
         return option()
         //For some reasons in Proxy true promises, is called method then. To avoid fail in promises, this hack will help.
-            .or(!isMethod(instance, method), () => _)
+            .or(!isMethod(instance, method), () => undefined)
             .or(checkType(method, type), () => response(_, method, success, error))
             .finally(() => errorAccess(method))
     }

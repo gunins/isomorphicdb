@@ -115,7 +115,7 @@ const transaction = (name, db) => (type) => new Proxy(dbDriver(db, name, type), 
     get(instance, method) {
         return option()
             .or(isMethod(instance, method), () => getInstance(instance, method))
-            .finally(() => instance)
+            .finally(() => undefined)
     }
 });
 
