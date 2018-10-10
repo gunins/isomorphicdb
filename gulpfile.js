@@ -83,7 +83,7 @@ gulp.task('updateVersion', done => {
     return sequence('bump', 'pushTags', done);
 });
 
-gulp.task('publish', ['updateVersion'], (cb) => {
+gulp.task('publish', ['default', 'updateVersion'], (cb) => {
     exec('npm publish ./', (err, stdout, stderr) => {
         console.log(stdout);
         console.log(stderr);
