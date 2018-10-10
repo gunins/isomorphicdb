@@ -9,9 +9,10 @@ const source = require('vinyl-source-stream');
 const mocha = require('gulp-mocha');
 const sequence = require('run-sequence');
 const bump = require('gulp-bump');
-const tag_version = require('gulp-tag-version');
+const tagVersion = require('gulp-tag-version');
 const git = require('gulp-git');
 const exec = require('child_process').exec;
+const filter = require('gulp-filter');
 
 
 const rollupStream = require('./build/gulp/plugins/rollupStream');
@@ -61,16 +62,14 @@ gulp.task('bump', () => gulp.src(['./package.json'])
     .pipe(bump({
         type: 'patch',
     }))
-    .pipe(gulp.dest('./')));
+    .pipe(gulp.dest('./'))
+    // commit the changed version number
+    .pipe(git.commit('bumps package version'))
+    .pipe(filter('package.json'))
+    .pipe(tagVersion()));
 
-const getPackageJson = () => JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 
-gulp.task('bumpCache', () => {
-    const {version} = getPackageJson();
-    return git.add()
-        .pipe(git.commit('bumps package version'))
-        .pipe(tag_version({version}));
-});
+
 
 gulp.task('pushTags', (cb) => {
     exec('git push --tags', (err, stdout, stderr) => {
@@ -81,10 +80,10 @@ gulp.task('pushTags', (cb) => {
 });
 
 gulp.task('updateVersion', done => {
-    return sequence('bump', 'bumpCache', 'pushTags', done);
+    return sequence('bump', 'pushTags', done);
 });
 
-gulp.task('publish', ['default', 'updateVersion'], (cb) => {
+gulp.task('publish', ['updateVersion'], (cb) => {
     exec('npm publish ./', (err, stdout, stderr) => {
         console.log(stdout);
         console.log(stderr);
