@@ -8,6 +8,11 @@ const resolve = require('rollup-plugin-node-resolve');
 const source = require('vinyl-source-stream');
 const mocha = require('gulp-mocha');
 const sequence = require('run-sequence');
+const bump = require('gulp-bump');
+const tag_version = require('gulp-tag-version');
+const git = require('gulp-git');
+const exec = require('child_process').exec;
+
 
 const rollupStream = require('./build/gulp/plugins/rollupStream');
 
@@ -29,7 +34,7 @@ gulp.task('client', ['clean'], () => rollup({
         }),
         includePaths({
             // include,
-            extensions: ['.js','.mjs']
+            extensions: ['.js', '.mjs']
         })]
 }).pipe(source('index.js'))
     .pipe(gulp.dest(`./dist`)));
@@ -52,4 +57,38 @@ gulp.task('test', done => {
     sequence('clean', 'rollupTest', 'runTest', done);
 });
 
+gulp.task('bump', () => gulp.src(['./package.json'])
+    .pipe(bump({
+        type: 'patch',
+    }))
+    .pipe(gulp.dest('./')));
+
+const getPackageJson = () => JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+
+gulp.task('bumpCache', () => {
+    const {version} = getPackageJson();
+    return git.add()
+        .pipe(git.commit('bumps package version'))
+        .pipe(tag_version({version}));
+});
+
+gulp.task('pushTags', (cb) => {
+    exec('git push --tags', (err, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        cb(err);
+    });
+});
+
+gulp.task('updateVersion', done => {
+    return sequence('bump', 'bumpCache', 'pushTags', done);
+});
+
+gulp.task('publish', ['default', 'updateVersion'], (cb) => {
+    exec('npm publish ./', (err, stdout, stderr) => {
+        console.log(stdout);
+        console.log(stderr);
+        cb(err);
+    });
+});
 gulp.task('default', ['test', 'client']);

@@ -50,7 +50,7 @@ export default ({
 import serviceAccount from './_hidden/serviceAccountKey';
 import admin from 'firebase-admin';
 
-import firebaseDb from 'isomorpicdb/db/firebase';
+import {firebaseAdapter} from 'isomorpicdb';
 
 const firebase = admin.initializeApp({
     credential:  admin.credential.cert(serviceAccount),
@@ -59,7 +59,7 @@ const firebase = admin.initializeApp({
 const dbName ='test';
 const dbVersion = 1;
 
-const db = firebaseDb(dbName, dbVersion, firebase.database())
+const db = firebaseAdapter(dbName, dbVersion, firebase.database())
 
 ```
 
@@ -70,7 +70,7 @@ const db = firebaseDb(dbName, dbVersion, firebase.database())
 import serviceAccount from './_hidden/serviceAccountKey';
 import admin from 'firebase-admin';
 
-import firestoreDb from 'isomorpicdb/db/firestore';
+import {firestoreAdapter} from 'isomorpicdb/';
 
 const firebase = admin.initializeApp({
     credential:  admin.credential.cert(serviceAccount),
@@ -82,7 +82,7 @@ const dbVersion = 1;
 
 const firestore = firebase.firestore();
 firestore.settings({timestampsInSnapshots: true});
-const db = firestoreDb(dbName, dbVersion, firestore);
+const db = firestoreAdapter(dbName, dbVersion, firestore);
 
 ```
 
@@ -92,7 +92,7 @@ For indexedDB no need serveiceAccount keys.
 
 ```javascript
 
-import indexedDBAdapter from 'isomorpicdb/db/indexedDB';
+import {indexedDBAdapter} from 'isomorpicdb';
 
 const dbName ='test';
 const dbVersion = 1;
