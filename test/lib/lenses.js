@@ -1,5 +1,17 @@
 import {expect, request} from 'chai';
-import {prop, assoc, lens, view, set, over, lensProp, lensPath} from '../../src/lib/lenses';
+import {
+    prop,
+    assoc,
+    lens,
+    view,
+    set,
+    over,
+    setOver,
+    setOverAsync,
+    lensProp,
+    lensPath,
+    overAsync
+} from '../../src/lib/lenses';
 import {compose} from '../../src/lib/curry';
 
 describe('tests for lenses', () => {
@@ -93,6 +105,57 @@ describe('tests for lenses', () => {
         expect(over(b, (_) => _ + '_vasja', data)).to.be.eql({
             id:   1,
             name: 'foo_vasja'
+        });
+    });
+    it('overAsync', async () => {
+        const data = {
+            id:   1,
+            name: 'foo'
+        };
+        const a = lensProp('id');
+        const b = lensProp('name');
+
+        expect(await overAsync(a)(async (a) => a + 2)(data)).to.be.eql({
+            id:   3,
+            name: 'foo'
+        });
+        expect(await overAsync(b, async (_) => _ + '_vasja', data)).to.be.eql({
+            id:   1,
+            name: 'foo_vasja'
+        });
+    });
+    it('setOver', () => {
+        const data = {
+            id:   1,
+            name: 'foo'
+        };
+        const a = lensProp('id');
+        const b = lensProp('name');
+
+        expect(setOver(a, b)((a) => a + 2)(data)).to.be.eql({
+            id:   'foo2',
+            name: 'foo'
+        });
+        expect(setOver(b, a, (_) => _ + '_vasja', data)).to.be.eql({
+            id:   1,
+            name: '1_vasja'
+        });
+    });
+    it('setOverAsync', async () => {
+        const data = {
+            id:   1,
+            name: 'foo'
+        };
+        const a = lensProp('id');
+        const b = lensProp('name');
+
+        expect(await setOverAsync(a, b)(async (a) => a + 2)(data)).to.be.eql({
+            id:   'foo2',
+            name: 'foo'
+        });
+        expect(await setOverAsync(b, a, async (_) => _ + '_vasja', data)).to.be.eql({
+            id:   1,
+            name: '1_vasja'
         });
     });
 

@@ -1,7 +1,7 @@
 import {merge, loopToArray, wrapToObject} from './dbUtils';
 import {option, promiseOption} from '../lib/option';
 import {uniqueArray} from '../lib/unique';
-import {compose, composeP} from '../lib/curry';
+import {compose, composeAsync} from '../lib/curry';
 import {proxy} from '../lib/proxy';
 
 const setID = (id = '') => ({
@@ -120,7 +120,7 @@ class DBDriver {
 
     update(keyPath, data, force = false) {
         const {get, set} = this[_getRef](keyPath);
-        return option().or(force, () => set(data)).finally(() => composeP(set, async _ => merge(_.data(), data), get)());
+        return option().or(force, () => set(data)).finally(() => composeAsync(set, async _ => merge(_.data(), data), get)());
     };
 
     delete(keyPath) {
