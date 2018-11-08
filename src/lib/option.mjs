@@ -1,9 +1,11 @@
+const lambda = () => {
+};
 //Option will find true statement and returning result (Call by Value)
 const option = (...methods) => ({
     or(bool, left) {
         return option(...methods, {bool, left})
     },
-    finally(right) {
+    finally(right=lambda) {
         const {left} = methods.find(({bool}) => bool) || {};
         return left ? left() : right();
     }
@@ -33,7 +35,7 @@ const optionAsync = (...methods) => ({
     or(bool, left) {
         return optionAsync(...methods, {bool, left})
     },
-    finally(right) {
+    finally(right= lambda) {
         return findAsync(methods)
             .then(left => left())
             .catch(() => right())
